@@ -15,7 +15,7 @@ import type { Enums } from "@/integrations/supabase/types";
 
 export default function Financeiro() {
   const [showNew, setShowNew] = useState(false);
-  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState("all");
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
@@ -23,7 +23,7 @@ export default function Financeiro() {
     queryKey: ["transactions", typeFilter],
     queryFn: async () => {
       let q = supabase.from("financial_transactions").select("*").order("transaction_date", { ascending: false });
-      if (typeFilter !== "all") q = q.eq("type", typeFilter);
+      if (typeFilter !== "all") q = q.eq("type", typeFilter as Enums<"transaction_type">);
       const { data, error } = await q;
       if (error) throw error;
       return data;

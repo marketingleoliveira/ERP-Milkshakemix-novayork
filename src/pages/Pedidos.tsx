@@ -22,8 +22,8 @@ const statusColors: Record<string, string> = {
 };
 
 export default function Pedidos() {
-  const [platformFilter, setPlatformFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [platformFilter, setPlatformFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [showNew, setShowNew] = useState(false);
   const queryClient = useQueryClient();
 
@@ -31,8 +31,8 @@ export default function Pedidos() {
     queryKey: ["orders", platformFilter, statusFilter],
     queryFn: async () => {
       let q = supabase.from("orders").select("*").order("created_at", { ascending: false });
-      if (platformFilter !== "all") q = q.eq("platform", platformFilter);
-      if (statusFilter !== "all") q = q.eq("status", statusFilter);
+      if (platformFilter !== "all") q = q.eq("platform", platformFilter as Enums<"delivery_platform">);
+      if (statusFilter !== "all") q = q.eq("status", statusFilter as Enums<"order_status">);
       const { data, error } = await q;
       if (error) throw error;
       return data;
