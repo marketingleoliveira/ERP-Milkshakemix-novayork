@@ -5,7 +5,7 @@ import {
   UtensilsCrossed,
   DollarSign,
   LogOut,
-  Zap,
+  IceCreamCone,
   Users,
   Settings,
 } from "lucide-react";
