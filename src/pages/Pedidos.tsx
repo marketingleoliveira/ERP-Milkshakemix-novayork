@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "@/contexts/TenantContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,17 +27,19 @@ export default function Pedidos() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [showNew, setShowNew] = useState(false);
   const queryClient = useQueryClient();
+  const { tenantId } = useTenant();
 
   const { data: orders, isLoading } = useQuery({
-    queryKey: ["orders", platformFilter, statusFilter],
+    queryKey: ["orders", platformFilter, statusFilter, tenantId],
     queryFn: async () => {
-      let q = supabase.from("orders").select("*").order("created_at", { ascending: false });
+      let q = supabase.from("orders").select("*").eq("tenant_id", tenantId!).order("created_at", { ascending: false });
       if (platformFilter !== "all") q = q.eq("platform", platformFilter as Enums<"delivery_platform">);
       if (statusFilter !== "all") q = q.eq("status", statusFilter as Enums<"order_status">);
       const { data, error } = await q;
       if (error) throw error;
       return data;
     },
+    enabled: !!tenantId,
   });
 
   const updateStatus = useMutation({
@@ -52,7 +55,7 @@ export default function Pedidos() {
 
   const createOrder = useMutation({
     mutationFn: async (order: { platform: Enums<"delivery_platform">; customer_name: string; customer_phone: string; total: number; notes: string }) => {
-      const { error } = await supabase.from("orders").insert({ ...order, subtotal: order.total });
+      const { error } = await supabase.from("orders").insert({ ...order, subtotal: order.total, tenant_id: tenantId });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -147,7 +150,6 @@ export default function Pedidos() {
 
 function NewOrderForm({ onSubmit, loading }: { onSubmit: (o: any) => void; loading: boolean }) {
   const [form, setForm] = useState({ platform: "balcao" as Enums<"delivery_platform">, customer_name: "", customer_phone: "", total: 0, notes: "" });
-
   return (
     <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="space-y-4">
       <Select value={form.platform} onValueChange={(v: any) => setForm({ ...form, platform: v })}>
