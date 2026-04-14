@@ -9,13 +9,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Plus, UtensilsCrossed } from "lucide-react";
+import { Plus, UtensilsCrossed, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 
 export default function Cardapio() {
   const [showAdd, setShowAdd] = useState(false);
   const [showAddCat, setShowAddCat] = useState(false);
+  const [search, setSearch] = useState("");
+  const [selectedCat, setSelectedCat] = useState("all");
   const queryClient = useQueryClient();
   const { tenantId } = useTenant();
 
@@ -72,12 +74,28 @@ export default function Cardapio() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["menu-items"] }),
   });
 
+  const filteredItems = items?.filter((item) => {
+    const matchesSearch = !search || item.name.toLowerCase().includes(search.toLowerCase());
+    const matchesCat = selectedCat === "all" || item.category_id === selectedCat;
+    return matchesSearch && matchesCat;
+  });
+
+  // Group items by category
+  const groupedItems: Record<string, typeof filteredItems> = {};
+  filteredItems?.forEach((item) => {
+    const catName = (item.categories as any)?.name || "Sem categoria";
+    if (!groupedItems[catName]) groupedItems[catName] = [];
+    groupedItems[catName]!.push(item);
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-heading font-bold">Cardápio</h1>
-          <p className="text-muted-foreground">Gerencie os itens do seu cardápio</p>
+          <p className="text-muted-foreground">
+            {items?.length ?? 0} itens em {categories?.length ?? 0} categorias
+          </p>
         </div>
         <div className="flex gap-2">
           <Dialog open={showAddCat} onOpenChange={setShowAddCat}>
@@ -101,35 +119,56 @@ export default function Cardapio() {
         </div>
       </div>
 
+      {/* Filters */}
+      <div className="flex gap-3 flex-wrap items-center">
+        <div className="relative max-w-xs flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input placeholder="Buscar item..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+        </div>
+        <Select value={selectedCat} onValueChange={setSelectedCat}>
+          <SelectTrigger className="w-48"><SelectValue placeholder="Categoria" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as categorias</SelectItem>
+            {categories?.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+
       {isLoading ? (
         <p className="text-muted-foreground text-center py-8">Carregando...</p>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {items && items.length > 0 ? items.map((item) => (
-            <Card key={item.id} className="border-0 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-              <CardContent className="p-5 space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                      <UtensilsCrossed className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">{item.name}</h3>
-                      {(item.categories as any)?.name && (
-                        <Badge variant="secondary" className="text-[10px] mt-0.5">{(item.categories as any).name}</Badge>
+      ) : Object.keys(groupedItems).length > 0 ? (
+        <div className="space-y-8">
+          {Object.entries(groupedItems).map(([catName, catItems]) => (
+            <div key={catName}>
+              <h2 className="text-lg font-heading font-bold mb-3 flex items-center gap-2">
+                <UtensilsCrossed className="h-4 w-4 text-primary" />
+                {catName}
+                <Badge variant="secondary" className="text-xs font-normal">{catItems?.length}</Badge>
+              </h2>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {catItems?.map((item) => (
+                  <Card key={item.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+                    <CardContent className="p-4 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="font-medium text-sm leading-tight">{item.name}</h3>
+                        <Switch
+                          checked={item.is_available ?? true}
+                          onCheckedChange={(v) => toggleAvailability.mutate({ id: item.id, is_available: v })}
+                        />
+                      </div>
+                      {item.description && (
+                        <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
                       )}
-                    </div>
-                  </div>
-                  <Switch checked={item.is_available ?? true} onCheckedChange={(v) => toggleAvailability.mutate({ id: item.id, is_available: v })} />
-                </div>
-                {item.description && <p className="text-sm text-muted-foreground">{item.description}</p>}
-                <p className="text-2xl font-heading font-bold text-gradient">R$ {Number(item.price).toFixed(2)}</p>
-              </CardContent>
-            </Card>
-          )) : (
-            <div className="col-span-full text-center py-12 text-muted-foreground">Nenhum item no cardápio</div>
-          )}
+                      <p className="text-lg font-heading font-bold text-gradient">R$ {Number(item.price).toFixed(2)}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
+      ) : (
+        <div className="text-center py-12 text-muted-foreground">Nenhum item encontrado</div>
       )}
     </div>
   );
@@ -142,7 +181,7 @@ function MenuItemForm({ categories, onSubmit, loading }: { categories: { id: str
       <Input placeholder="Nome do item" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
       <Textarea placeholder="Descrição" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
       <Select value={form.category_id ?? ""} onValueChange={(v) => setForm({ ...form, category_id: v })}>
-        <SelectTrigger><SelectValue placeholder="Categoria (opcional)" /></SelectTrigger>
+        <SelectTrigger><SelectValue placeholder="Categoria" /></SelectTrigger>
         <SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
       </Select>
       <Input type="number" step="0.01" placeholder="Preço" value={form.price || ""} onChange={(e) => setForm({ ...form, price: +e.target.value })} required />
