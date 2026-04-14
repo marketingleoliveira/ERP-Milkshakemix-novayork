@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Zap } from "lucide-react";
+import { IceCreamCone } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Login() {
@@ -55,10 +55,10 @@ export default function Login() {
       <Card className="w-full max-w-md shadow-xl border-0">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl gradient-primary shadow-lg">
-            <Zap className="h-8 w-8 text-primary-foreground" />
+            <IceCreamCone className="h-8 w-8 text-primary-foreground" />
           </div>
           <div>
-            <CardTitle className="font-heading text-2xl">POS Digitale</CardTitle>
+            <CardTitle className="font-heading text-2xl">Milk Shake Mix Romão</CardTitle>
             <CardDescription className="mt-1">
               {isSignUp ? "Crie sua conta e comece grátis por 14 dias" : "Acesse o sistema de gestão"}
             </CardDescription>

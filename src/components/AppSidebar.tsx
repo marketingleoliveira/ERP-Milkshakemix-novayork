@@ -5,7 +5,7 @@ import {
   UtensilsCrossed,
   DollarSign,
   LogOut,
-  Zap,
+  IceCreamCone,
   Users,
   Settings,
 } from "lucide-react";
@@ -57,11 +57,11 @@ export function AppSidebar() {
           <SidebarGroupLabel className="px-4 py-6 text-sidebar-foreground/60">
             <div className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary">
-                <Zap className="h-4 w-4 text-primary-foreground" />
+                <IceCreamCone className="h-4 w-4 text-primary-foreground" />
               </div>
               {!collapsed && (
                 <div>
-                  <p className="font-heading text-sm font-bold text-sidebar-accent-foreground">POS Digitale</p>
+                  <p className="font-heading text-sm font-bold text-sidebar-accent-foreground">MilkShake Mix</p>
                   <p className="text-[10px] text-sidebar-foreground/50">
                     {tenant?.name || "Sistema de Gestão"}
                   </p>
