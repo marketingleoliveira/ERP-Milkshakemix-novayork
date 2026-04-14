@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "@/contexts/TenantContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,27 +17,30 @@ export default function Cardapio() {
   const [showAdd, setShowAdd] = useState(false);
   const [showAddCat, setShowAddCat] = useState(false);
   const queryClient = useQueryClient();
+  const { tenantId } = useTenant();
 
   const { data: items, isLoading } = useQuery({
-    queryKey: ["menu-items"],
+    queryKey: ["menu-items", tenantId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("menu_items").select("*, categories(name)").order("name");
+      const { data, error } = await supabase.from("menu_items").select("*, categories(name)").eq("tenant_id", tenantId!).order("name");
       if (error) throw error;
       return data;
     },
+    enabled: !!tenantId,
   });
 
   const { data: categories } = useQuery({
-    queryKey: ["categories"],
+    queryKey: ["categories", tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from("categories").select("*").order("name");
+      const { data } = await supabase.from("categories").select("*").eq("tenant_id", tenantId!).order("name");
       return data ?? [];
     },
+    enabled: !!tenantId,
   });
 
   const addItem = useMutation({
     mutationFn: async (item: { name: string; description: string; price: number; category_id: string | null }) => {
-      const { error } = await supabase.from("menu_items").insert(item);
+      const { error } = await supabase.from("menu_items").insert({ ...item, tenant_id: tenantId });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -49,7 +53,7 @@ export default function Cardapio() {
 
   const addCategory = useMutation({
     mutationFn: async (cat: { name: string; description: string }) => {
-      const { error } = await supabase.from("categories").insert(cat);
+      const { error } = await supabase.from("categories").insert({ ...cat, tenant_id: tenantId });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -116,10 +120,7 @@ export default function Cardapio() {
                       )}
                     </div>
                   </div>
-                  <Switch
-                    checked={item.is_available ?? true}
-                    onCheckedChange={(v) => toggleAvailability.mutate({ id: item.id, is_available: v })}
-                  />
+                  <Switch checked={item.is_available ?? true} onCheckedChange={(v) => toggleAvailability.mutate({ id: item.id, is_available: v })} />
                 </div>
                 {item.description && <p className="text-sm text-muted-foreground">{item.description}</p>}
                 <p className="text-2xl font-heading font-bold text-gradient">R$ {Number(item.price).toFixed(2)}</p>
@@ -134,22 +135,15 @@ export default function Cardapio() {
   );
 }
 
-function MenuItemForm({ categories, onSubmit, loading }: {
-  categories: { id: string; name: string }[];
-  onSubmit: (i: any) => void;
-  loading: boolean;
-}) {
+function MenuItemForm({ categories, onSubmit, loading }: { categories: { id: string; name: string }[]; onSubmit: (i: any) => void; loading: boolean }) {
   const [form, setForm] = useState({ name: "", description: "", price: 0, category_id: "" as string | null });
-
   return (
     <form onSubmit={(e) => { e.preventDefault(); onSubmit({ ...form, category_id: form.category_id || null }); }} className="space-y-4">
       <Input placeholder="Nome do item" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
       <Textarea placeholder="Descrição" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
       <Select value={form.category_id ?? ""} onValueChange={(v) => setForm({ ...form, category_id: v })}>
         <SelectTrigger><SelectValue placeholder="Categoria (opcional)" /></SelectTrigger>
-        <SelectContent>
-          {categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-        </SelectContent>
+        <SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
       </Select>
       <Input type="number" step="0.01" placeholder="Preço" value={form.price || ""} onChange={(e) => setForm({ ...form, price: +e.target.value })} required />
       <Button type="submit" className="w-full gradient-primary text-primary-foreground" disabled={loading}>{loading ? "Salvando..." : "Adicionar"}</Button>
@@ -160,7 +154,6 @@ function MenuItemForm({ categories, onSubmit, loading }: {
 function CategoryForm({ onSubmit, loading }: { onSubmit: (c: any) => void; loading: boolean }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-
   return (
     <form onSubmit={(e) => { e.preventDefault(); onSubmit({ name, description }); }} className="space-y-4">
       <Input placeholder="Nome da categoria" value={name} onChange={(e) => setName(e.target.value)} required />

@@ -2,9 +2,10 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTenant } from "@/contexts/TenantContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -18,31 +19,34 @@ export default function Financeiro() {
   const [typeFilter, setTypeFilter] = useState("all");
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { tenantId } = useTenant();
 
   const { data: transactions, isLoading } = useQuery({
-    queryKey: ["transactions", typeFilter],
+    queryKey: ["transactions", typeFilter, tenantId],
     queryFn: async () => {
-      let q = supabase.from("financial_transactions").select("*").order("transaction_date", { ascending: false });
+      let q = supabase.from("financial_transactions").select("*").eq("tenant_id", tenantId!).order("transaction_date", { ascending: false });
       if (typeFilter !== "all") q = q.eq("type", typeFilter as Enums<"transaction_type">);
       const { data, error } = await q;
       if (error) throw error;
       return data;
     },
+    enabled: !!tenantId,
   });
 
   const { data: summary } = useQuery({
-    queryKey: ["financial-summary"],
+    queryKey: ["financial-summary", tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from("financial_transactions").select("type, amount");
+      const { data } = await supabase.from("financial_transactions").select("type, amount").eq("tenant_id", tenantId!);
       const receita = data?.filter((t) => t.type === "receita").reduce((s, t) => s + Number(t.amount), 0) ?? 0;
       const despesa = data?.filter((t) => t.type === "despesa").reduce((s, t) => s + Number(t.amount), 0) ?? 0;
       return { receita, despesa, saldo: receita - despesa };
     },
+    enabled: !!tenantId,
   });
 
   const addTransaction = useMutation({
     mutationFn: async (t: { type: Enums<"transaction_type">; category: string; description: string; amount: number; transaction_date: string }) => {
-      const { error } = await supabase.from("financial_transactions").insert({ ...t, created_by: user?.id });
+      const { error } = await supabase.from("financial_transactions").insert({ ...t, created_by: user?.id, tenant_id: tenantId });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -75,51 +79,34 @@ export default function Financeiro() {
       <div className="grid gap-4 sm:grid-cols-3">
         <Card className="border-0 shadow-sm">
           <CardContent className="p-6 flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success/10">
-              <TrendingUp className="h-6 w-6 text-success" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Receitas</p>
-              <p className="text-2xl font-heading font-bold">R$ {(summary?.receita ?? 0).toFixed(2)}</p>
-            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success/10"><TrendingUp className="h-6 w-6 text-success" /></div>
+            <div><p className="text-sm text-muted-foreground">Receitas</p><p className="text-2xl font-heading font-bold">R$ {(summary?.receita ?? 0).toFixed(2)}</p></div>
           </CardContent>
         </Card>
         <Card className="border-0 shadow-sm">
           <CardContent className="p-6 flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-destructive/10">
-              <TrendingDown className="h-6 w-6 text-destructive" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Despesas</p>
-              <p className="text-2xl font-heading font-bold">R$ {(summary?.despesa ?? 0).toFixed(2)}</p>
-            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-destructive/10"><TrendingDown className="h-6 w-6 text-destructive" /></div>
+            <div><p className="text-sm text-muted-foreground">Despesas</p><p className="text-2xl font-heading font-bold">R$ {(summary?.despesa ?? 0).toFixed(2)}</p></div>
           </CardContent>
         </Card>
         <Card className="border-0 shadow-sm">
           <CardContent className="p-6 flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-              <Wallet className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Saldo</p>
-              <p className="text-2xl font-heading font-bold">R$ {(summary?.saldo ?? 0).toFixed(2)}</p>
-            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10"><Wallet className="h-6 w-6 text-primary" /></div>
+            <div><p className="text-sm text-muted-foreground">Saldo</p><p className="text-2xl font-heading font-bold">R$ {(summary?.saldo ?? 0).toFixed(2)}</p></div>
           </CardContent>
         </Card>
       </div>
 
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3">
-          <div className="flex items-center gap-3">
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                <SelectItem value="receita">Receitas</SelectItem>
-                <SelectItem value="despesa">Despesas</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="receita">Receitas</SelectItem>
+              <SelectItem value="despesa">Despesas</SelectItem>
+            </SelectContent>
+          </Select>
         </CardHeader>
         <CardContent>
           <Table>
@@ -168,7 +155,6 @@ function TransactionForm({ onSubmit, loading }: { onSubmit: (t: any) => void; lo
     amount: 0,
     transaction_date: new Date().toISOString().split("T")[0],
   });
-
   return (
     <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="space-y-4">
       <Select value={form.type} onValueChange={(v: any) => setForm({ ...form, type: v })}>
