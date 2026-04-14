@@ -58,7 +58,7 @@ export default function Login() {
             <Zap className="h-8 w-8 text-primary-foreground" />
           </div>
           <div>
-            <CardTitle className="font-heading text-2xl">POS Digitale</CardTitle>
+            <CardTitle className="font-heading text-2xl">Milk Shake Mix Romão</CardTitle>
             <CardDescription className="mt-1">
               {isSignUp ? "Crie sua conta e comece grátis por 14 dias" : "Acesse o sistema de gestão"}
             </CardDescription>

@@ -61,7 +61,7 @@ export function AppSidebar() {
               </div>
               {!collapsed && (
                 <div>
-                  <p className="font-heading text-sm font-bold text-sidebar-accent-foreground">POS Digitale</p>
+                  <p className="font-heading text-sm font-bold text-sidebar-accent-foreground">MilkShake Mix</p>
                   <p className="text-[10px] text-sidebar-foreground/50">
                     {tenant?.name || "Sistema de Gestão"}
                   </p>
