@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { TenantProvider } from "@/contexts/TenantContext";
 import { ERPLayout } from "@/components/ERPLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -36,15 +37,17 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />
-            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/estoque" element={<ProtectedRoute><Estoque /></ProtectedRoute>} />
-            <Route path="/pedidos" element={<ProtectedRoute><Pedidos /></ProtectedRoute>} />
-            <Route path="/cardapio" element={<ProtectedRoute><Cardapio /></ProtectedRoute>} />
-            <Route path="/financeiro" element={<ProtectedRoute><Financeiro /></ProtectedRoute>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <TenantProvider>
+            <Routes>
+              <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />
+              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/estoque" element={<ProtectedRoute><Estoque /></ProtectedRoute>} />
+              <Route path="/pedidos" element={<ProtectedRoute><Pedidos /></ProtectedRoute>} />
+              <Route path="/cardapio" element={<ProtectedRoute><Cardapio /></ProtectedRoute>} />
+              <Route path="/financeiro" element={<ProtectedRoute><Financeiro /></ProtectedRoute>} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </TenantProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
