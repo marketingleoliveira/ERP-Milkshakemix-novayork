@@ -1,26 +1,44 @@
-# Milkshake Mix Manager
+# Milkshake Mix Manager (ERP Multi-Tenant)
 
-crie um sistema de estoque e gestão de negócio para a empresa https://www.instagram.com/milkshakemixbrasil/ permitindo a integração com as plataformas de delivery Kreeta, Ifood e 99Food como o https://glowpos.com/ faz, quero um sistema ERP
+Sistema de gestão ERP empresarial e controle de estoque desenvolvido para a franquia/empresa **Milkshake Mix**, focado no setor de alimentação/food service com arquitetura multi-loja (*multi-tenant*) e integração com ecossistemas de delivery e PDV.
 
-This project was built with [Lovable](https://lovable.dev).
+🔗 **Live App:** [milkmix.lovable.app](https://milkmix.lovable.app)  
+🌐 **Portfólio do Desenvolvedor:** [portfolioleoliveira.lovable.app](https://portfolioleoliveira.lovable.app)
 
-**Live app**: https://milkmix.lovable.app
+---
 
-## Build with Lovable
+## 📌 Sobre o Projeto
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/b671a80d-01a3-42a0-aa35-d4eff7f3d1c4).
+O **ERP-Milkshakemix-novayork** é uma solução completa para centralização de operações comerciais de franquias e lojas da rede Milkshake Mix. O sistema combina controle de insumos e produtos em estoque, arquitetura *multi-tenant* para isolamento de dados entre unidades e infraestrutura de integração voltada a plataformas de delivery e PDV (como iFood, Kreeta, 99Food e sistemas no estilo GlowPOS).
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+---
 
-## Development
+## ⚡ Principais Funcionalidades
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+* **Arquitetura Multi-Tenant:** Isolamento seguro de dados e recursos entre diferentes unidades/franquias da rede.
+* **Gestão de Estoque & Itens:** Controle de insumos, ficha técnica de produtos e atualização de inventário por loja.
+* **Hub para Integrações Delivery/PDV:** Estrutura pronta para conectar pedidos vindos de plataformas terceiras e PDVs.
+* **Painel Administrativo:** Monitoramento centralizado de movimentações, vendas e estoque.
 
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+* **Frontend:** TypeScript, React, Vite, Tailwind CSS, shadcn/ui
+* **Backend & Banco de Dados:** Supabase (PL/pgSQL) com suporte Multi-Tenant
+* **Testes e Qualidade:** Playwright, Vitest
+* **Gerenciador de Pacotes:** Bun / npm
+* **Desenvolvimento Acelerado:** Lovable
+
+---
+
+## 🚀 Como Executar o Projeto
+
+### Pré-requisitos
+Certifique-se de ter o **Node.js** e o **npm** (ou **Bun**) instalados em sua máquina.
+
+### Passo a Passo
+
+1. **Clonar o repositório:**
+   ```bash
+   git clone [https://github.com/RennanLucas/ERP-Milkshakemix-novayork.git](https://github.com/RennanLucas/ERP-Milkshakemix-novayork.git)
